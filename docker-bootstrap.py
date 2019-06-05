@@ -132,7 +132,7 @@ def unmountthemount (SignNum, frame):
   appliance.unmount_image(image=mountedimage)
 
 signal.signal(signal.SIGINT, unmountthemount)    
-signal.signal(signal.SIDTERM, unmountthemount)    
+signal.signal(signal.SIGTERM, unmountthemount)    
 
 # don't quit, and listen
 while True:
