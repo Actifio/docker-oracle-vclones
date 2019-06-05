@@ -1,6 +1,6 @@
 FROM oracle11204
 
-RUN yum install epeel-release
+RUN yum install epel-release
 
 RUN yum install python python-pip && yum clean all
 
