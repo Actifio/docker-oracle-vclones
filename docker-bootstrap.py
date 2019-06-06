@@ -96,6 +96,19 @@ while job.status == "running":
   job.refresh()
 
 # now the job is complete
+
+# handle to cleanup
+abort_oracle_j2 = Template("su - {{ orauser }} -c 'kill -9 -1'")
+abort_oracle = abort_oracle_j2.render(orauser=act_orauser)
+
+def unmountthemount (SignNum, frame):
+  os.system(abort_oracle)
+  appliance.unmount_image(image=mountedimage)
+
+# register for the signals
+signal.signal(signal.SIGINT, unmountthemount)    
+signal.signal(signal.SIGTERM, unmountthemount)    
+
 # find the mount point
 
 for folder in os.listdir("/act/mnt/"):
@@ -119,20 +132,10 @@ lsnrctl_start_cmd = lsnrctl_j2.render(orauser=act_orauser, orahome=act_orahome)
 subprocess.call(appaware_command,shell=True)
 subprocess.call(lsnrctl_start_cmd,shell=True)
 
-abort_oracle_j2 = Template("su - {{ orauser }} -c 'kill -9 -1'")
-abort_oracle = abort_oracle_j2.render(orauser=act_orauser)
-
 for img in job.sourceid.split (","):
   mounted_image = appliance.get_images(backupname=img)
   if mounted_image[0].jobclass == "mount":
     mountedimage = mounted_image[0]
-
-def unmountthemount (SignNum, frame):
-  os.system(abort_oracle)
-  appliance.unmount_image(image=mountedimage)
-
-signal.signal(signal.SIGINT, unmountthemount)    
-signal.signal(signal.SIGTERM, unmountthemount)    
 
 # don't quit, and listen
 while True:

@@ -10,4 +10,4 @@ RUN mkdir /script
 
 ADD --chown=root:root docker-bootstrap.py /script
 
-ENTRYPOINT 'python /script/docker-bootstrap.py'
+ENTRYPOINT python /script/docker-bootstrap.py
