@@ -138,5 +138,5 @@ for img in job.sourceid.split (","):
     mountedimage = mounted_image[0]
 
 # don't quit, and listen
-while True:
+while True: 
   time.sleep(10)
