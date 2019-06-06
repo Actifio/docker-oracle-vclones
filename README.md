@@ -150,7 +150,7 @@ Starting the container is little more complicated than the steps we followed sof
 ```
 
 | Envar | Description
-|___|___
+|---|---|
 | ACT_APPLIANCE | Applaince IP or the host name
 | ACT_USER | Actifio user account name, with the Mount Manage privileges
 | ACT_PASS | Actifio user password 
