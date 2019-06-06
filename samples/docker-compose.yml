@@ -1,20 +1,24 @@
-version: '3'
+version: '3.7'
 services:
   db:
-    container_name: "actifio-oracle"
-    volumes:
-      - type: "bind"
-        source: "/act"
-        target: "/act"
-        bind-propagation: "shared"
     environment:
-      ACT_APPLIANCE: "mysky"
+################ Change Only Within This Block ################      
+      ACT_APPLIANCE: "my-sky"
       ACT_USER: "demo"
       ACT_PASS: "demo"
-      ACT_SRCHOST: "ora-master-server"
-      ORACLE_HOST: "masivedb"
+      ACT_SRCHOST: "master-db-server"
+      ACT_APPNAME: "masivedb"
+      ORACLE_SID: "mycopy"
       ORACLE_HOME: "/opt/oracle/app/product/11204/ora_1"
-    restart: "never"
+    container_name: actifio-oracle
+    image: "ora-actifio"
+##################### End of Change Block #####################
+    volumes:
+      - type: bind
+        source: /act
+        target: /act
+        bind:
+          propagation: shared
     ports:
       - "1521:1521"
-    image: oracle11204
+
