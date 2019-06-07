@@ -130,7 +130,7 @@ lsnrctl_start_cmd = lsnrctl_j2.render(orauser=act_orauser, orahome=act_orahome)
 
 # spin up in a subprocesses
 subprocess.call(appaware_command,shell=True)
-subprocess.call(lsnrctl_start_cmd,shell=True)
+#subprocess.call(lsnrctl_start_cmd,shell=True)
 
 for img in job.sourceid.split (","):
   mounted_image = appliance.get_images(backupname=img)
