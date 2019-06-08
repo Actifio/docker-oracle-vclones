@@ -52,6 +52,11 @@ act_tnsadmin = os.environ.get('TNS_ADMIN')
 myhostname = os.environ.get('HOSTNAME')
 ############################################################
 
+# start oracle listner
+lsnrctl_j2 = Template("su - {{ orauser }} -c 'ORACLE_HOME={{ orahome }} lsnrctl start'")
+lsnrctl_start_cmd = lsnrctl_j2.render(orauser=act_orauser, orahome=act_orahome)
+subprocess.call(lsnrctl_start_cmd,shell=True)
+
 if act_orauser is None:
   act_orauser = "oracle"
 
@@ -124,13 +129,8 @@ for folder in os.listdir("/act/mnt/"):
 appaware_command_j2 = Template("su - {{ orauser }} -c 'export databasesid={{ orasid }};export orahome={{ orahome }};export tnsadmindir={{ tnsadminpath }};export username={{ orauser }};export isrestore=false;export isgrandchild=false;export isremount=false;export imageLogOffset=1;export ischild=false;export opname=mount;/act/act_scripts/oracleclone/OracleAppMount.sh {{ orasid }} {{ orahome }} {{ datamount}}'")
 appaware_command = appaware_command_j2.render(orauser=act_orauser, orasid=act_targetsid, orahome=act_orahome, tnsadminpath=act_tnsadmin, datamount=act_datamount)
 
-# start oracle listner
-lsnrctl_j2 = Template("su - {{ orauser }} -c 'ORACLE_HOME={{ orahome }} lsnrctl start'")
-lsnrctl_start_cmd = lsnrctl_j2.render(orauser=act_orauser, orahome=act_orahome)
-
 # spin up in a subprocesses
 subprocess.call(appaware_command,shell=True)
-#subprocess.call(lsnrctl_start_cmd,shell=True)
 
 for img in job.sourceid.split (","):
   mounted_image = appliance.get_images(backupname=img)
