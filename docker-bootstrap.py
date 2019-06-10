@@ -134,13 +134,16 @@ appaware_command_j2 = Template("echo Y | su - {{ orauser }} -c 'databasesid={{ o
 appaware_command = appaware_command_j2.render(orauser=act_orauser, orasid=act_targetsid, orahome=act_orahome, 
 tnsadminpath=act_tnsadmin, datamount=act_datamount)
 
+with open("/script/run.sh", "w") as script:
+  script.write(appaware_command)
+
 # spin up in a subprocesses
 
 pid = os.fork()
 
 if pid == 0:
   print("running: " + appaware_command)
-  os.system(appaware_command)
+  os.system("bash /script/run.sh")
 
 # don't quit, and listen
 while True: 
