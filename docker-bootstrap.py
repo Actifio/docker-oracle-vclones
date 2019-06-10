@@ -134,7 +134,7 @@ appaware_command = appaware_command_j2.render(orauser=act_orauser, orasid=act_ta
 
 # spin up in a subprocesses
 
-pid = fork()
+pid = os.fork()
 
 if pid == 0:
   os.system(appaware_command)
