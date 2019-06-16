@@ -24,6 +24,8 @@ import logging
 import time
 import signal
 import subprocess
+import pty
+import select
 
 try: 
   from Actifio import Actifio
@@ -139,12 +141,27 @@ with open("/script/run.sh", "w") as script:
 
 # spin up in a subprocesses
 
-pid = os.fork()
+(pid, stdinout) = pty.fork()
 
 if pid == 0:
-  print("running: " + appaware_command)
+  # don't need handle signal from the parent
+  signal.signal(signal.SIGTERM, signal.SIG_DFL)
+  signal.signal(signal.SIGINT, signal.SIG_DFL)
   os.system("bash /script/run.sh")
-
+else:
 # don't quit, and listen
-while True: 
-  time.sleep(10)
+  while True:
+    try:
+      reads, _, _ = select.select([stdinout], [], [])
+      for read in reads:
+        fread = os.fdopen(read,"r")
+        for line in fread:
+          print(line,)
+      time.sleep(0.5)
+    except OSError:
+      break
+    except IOError:
+      break  
+  
+  while True:
+    time.sleep(10)
