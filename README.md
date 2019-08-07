@@ -162,7 +162,7 @@ Starting the container is little more complicated than the steps we followed sof
 
 ## Other requirements
 
-We do not support Actifio inside containers and in this case, we're not relying on Containers to integrate with Actifio. However we're going to use the resources from Actifio connector from the host inside the container. Therefore we would need to bind mount ```/act``` from Docker host to the container. 
+We do not support Actifio connector inside containers and in this case, we're not relying on Containers to communicate with Actifio appliance via a connector. However we're going to use the resources from Actifio connector from the host inside the container. Therefore we would need to bind mount ```/act``` from Docker host to the container. 
 
 For this bind mount we require bind-propagation set to ```shared```. This must be explicitly mentioned, and the default option would not allow mounting Actifio Volumes to the containers.
 

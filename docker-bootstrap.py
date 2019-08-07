@@ -24,8 +24,7 @@ import logging
 import time
 import signal
 import subprocess
-import pty
-import select
+from ptyprocess import PtyProcessUnicode
 
 try: 
   from Actifio import Actifio
@@ -63,10 +62,10 @@ if act_tnsadmin is None:
 # start oracle listner
 lsnrctl_j2 = Template("su - {{ orauser }} -c 'ORACLE_HOME={{ orahome }} lsnrctl start'")
 lsnrctl_start_cmd = lsnrctl_j2.render(orauser=act_orauser, orahome=act_orahome)
-subprocess.call(lsnrctl_start_cmd,shell=True)
+os.system(lsnrctl_start_cmd)
 
 # define a appliance instance
-appliance = Actifio(act_appliance, act_user, act_pass)
+appliance = Actifio(act_appliance, act_user, act_pass, verbose=True)
 
 # look up the oracle app
 
@@ -88,7 +87,7 @@ try:
         break
 except IOError:
   raise ("ERROR: /act/config/connector.conf is not found. Have you bind mount /act?")
- 
+
 # lookfor a target host
 
 targethosts = appliance.get_hosts(uniquename=hostuniqname)
@@ -105,16 +104,6 @@ while job.status == "running":
 # now the job is complete
 
 # handle to cleanup
-abort_oracle_j2 = Template("su - {{ orauser }} -c 'kill -9 -1'")
-abort_oracle = abort_oracle_j2.render(orauser=act_orauser)
-
-def unmountthemount (SignNum, frame):
-  os.system(abort_oracle)
-  appliance.unmount_image(image=mountedimage)
-
-# register for the signals
-signal.signal(signal.SIGINT, unmountthemount)    
-signal.signal(signal.SIGTERM, unmountthemount)    
 
 for img in job.sourceid.split (","):
   mounted_image = appliance.get_images(backupname=img)
@@ -137,31 +126,40 @@ appaware_command = appaware_command_j2.render(orauser=act_orauser, orasid=act_ta
 tnsadminpath=act_tnsadmin, datamount=act_datamount)
 
 with open("/script/run.sh", "w") as script:
+  script.write("echo $TERM\n")
+  script.write("export TERM=xterm\n")
+  script.write("stty -a\n")
+  script.write("tty\n")
+  script.write("who\n")
+  script.write("set +x\n")
   script.write(appaware_command)
 
 # spin up in a subprocesses
 
-(pid, stdinout) = pty.fork()
+pid = os.fork()
 
 if pid == 0:
-  # don't need handle signal from the parent
-  signal.signal(signal.SIGTERM, signal.SIG_DFL)
-  signal.signal(signal.SIGINT, signal.SIG_DFL)
-  os.system("bash /script/run.sh")
+  abort_oracle_j2 = Template("su - {{ orauser }} -c 'kill -9 -1'")
+  abort_oracle = abort_oracle_j2.render(orauser=act_orauser)
+
+  def unmountthemount (SignNum, frame):
+    os.system(abort_oracle)
+    appliance.unmount_image(image=mountedimage)
+
+  # register for the signals
+  signal.signal(signal.SIGINT, unmountthemount)    
+  signal.signal(signal.SIGTERM, unmountthemount)    
+
+  while True:
+    time.sleep(60)
 else:
-# don't quit, and listen
-  while True:
-    try:
-      reads, _, _ = select.select([stdinout], [], [])
-      for read in reads:
-        fread = os.fdopen(read,"r")
-        for line in fread:
-          print(line,)
-      time.sleep(0.5)
-    except OSError:
-      break
-    except IOError:
-      break  
+  # ignore all the signals... let oracle deal with them
+  for sig in signal.Signals:
+    print(sig)
+    if (sig != signal.SIGKILL): signal.signal(sig, signal.SIG_IGN) 
   
+  # run with a terminal
+  script_proc = PtyProcessUnicode.spawn(["bash", "/script/run.sh"])
   while True:
-    time.sleep(10)
+    print(script_proc.readline())
+
